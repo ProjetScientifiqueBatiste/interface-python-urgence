@@ -7,6 +7,7 @@ import threading
 import serial
 import time
 import multiprocessing as mp
+import hashlib
 
 
 HOST = "192.168.1.24"
@@ -44,14 +45,31 @@ def initUART():
         exit()
 
 
+def verifHash(message,hash):
+    result = hashlib.md5(message)
+    return result.digest() == hash
+
+def verifKey(key):
+    keyVerif = "TTBM"
+    return key == keyVerif.encode()
+
+def traiterRequete(req):
+    taille = int.from_bytes([req[-1]],"big")
+    print("verif calc : " + str(verifHash(req[0:taille],req[-17:-1])))
+    print("verif key : " + str(verifKey(req[0:4])))
+
+    #verifHash(req[taille:],req[-13:-2])
+
 def sendUARTMessage(msg):
     ser.write(msg)
-    print("Message <" + str(msg) + "> sent to micro-controller.")
+    print("Message <" +'{:10}'.format(str(msg))+ ">----Send to micro-controller.")
+    
 
 def readUARTMessage(ser):
     while True:
-        t = ser.read(7)
-        print("Message <" + str(t) + "> sent to micro-controller.")
+        t = ser.read(32)
+        print("Message <" +'{:10}'.format(str(t  ))+ ">--------Read to micro-controller.")
+        traiterRequete(t)
 
 # Main program logic follows:dmesg | grep tty
 if __name__ == '__main__':
@@ -72,8 +90,8 @@ if __name__ == '__main__':
 
     while (True) :
         a = 1
-        time.sleep(1)
-        #sendUARTMessage(bytes("OKGG", 'utf-8'))
+        time.sleep(5)
+        #sendUARTMessage(bytes("OKG\n", 'utf-8'))
         
 
         
